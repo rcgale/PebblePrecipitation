@@ -1,4 +1,7 @@
+var JS_KEY_API_KEY = 98;
 var JS_KEY_IS_MINUTELY = 99;
+
+var apiKey;
 var isMinutely = false;
 
 var xhrRequest = function (url, type, callback) {
@@ -12,8 +15,7 @@ var xhrRequest = function (url, type, callback) {
 
 function locationSuccess(pos) {
   // Construct URL
-  var myAPIKey = 'zzzzz';
-  var url = 'https://api.forecast.io/forecast/' + myAPIKey + '/' +
+  var url = 'https://api.forecast.io/forecast/' + apiKey + '/' +
       //"40.7142,-74.0064";
       pos.coords.latitude + ',' +  pos.coords.longitude;
   console.log(url);
@@ -67,6 +69,7 @@ Pebble.addEventListener('ready',
 Pebble.addEventListener('appmessage',
   function(e) {
     console.log('Received message: ' + JSON.stringify(e.payload));
+    apiKey = e.payload[JS_KEY_API_KEY];
     isMinutely = e.payload[JS_KEY_IS_MINUTELY] ? true : false;
     getWeather();
   }                     

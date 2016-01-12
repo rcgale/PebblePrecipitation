@@ -10,6 +10,7 @@
 #define POINTS_HOURLY 12
 #define UPDATE_INTERVAL 1
 #define JS_KEY_IS_MINUTELY 99
+#define JS_KEY_API_KEY 98
 
 static Layer *s_canvas_layer;
 static GPoint s_center;
@@ -98,6 +99,7 @@ static void get_weather() {
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
   dict_write_uint8(iter, JS_KEY_IS_MINUTELY, settings.is_minutely);
+  dict_write_cstring(iter, JS_KEY_API_KEY, settings.api_key);
   app_message_outbox_send();  
 }
 
