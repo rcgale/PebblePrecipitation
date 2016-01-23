@@ -2,6 +2,8 @@
 #include <clock.h>
 #include <forecast.h>
 #include <configuration.h>
+#include <current_time.h>
+#include <callback.h>
 
 #define ANIMATION_DURATION 500
 #define ANIMATION_DELAY    600
@@ -9,8 +11,9 @@
 static Window *s_main_window;
 
 static void tick_handler(struct tm *tick_time, TimeUnits changed) {
-  forecast_update(tick_time);
-  clock_update(tick_time); 
+  current_time_update(tick_time);
+  forecast_update();
+  clock_update(); 
 }
 
 static void window_load(Window *window) {
@@ -30,6 +33,7 @@ static void window_unload(Window *window) {
 }
 
 static void init() {
+  callback_create();
   configuration_load();
   srand(time(NULL));
 

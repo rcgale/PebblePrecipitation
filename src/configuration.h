@@ -1,4 +1,5 @@
 #pragma once
+
 typedef struct {
   char* api_key;
   bool is_minutely;
@@ -9,3 +10,4 @@ Settings settings;
 void configuration_load();
 void configuration_set_is_minutely(bool value);
 void configuration_set_api_key(char* value);
+void configuration_process_callback(DictionaryIterator *iterator, void *context);

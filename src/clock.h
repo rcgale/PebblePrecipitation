@@ -1,5 +1,5 @@
 #pragma once
 
-void clock_update(struct tm *tick_time);
+void clock_update();
 Layer* clock_create(GRect window_bounds);
 void clock_destroy();

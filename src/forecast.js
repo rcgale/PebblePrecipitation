@@ -1,5 +1,7 @@
 var JS_KEY_API_KEY = 98;
 var JS_KEY_IS_MINUTELY = 99;
+var CALLBACK_ID_KEY = 32767;
+var CBID_FORECAST = 1;
 
 var apiKey;
 var isMinutely = false;
@@ -13,10 +15,13 @@ var xhrRequest = function (url, type, callback) {
   xhr.send();
 };
 
+function getIntensityPercent(intensity) {
+  return parseInt(Math.min(intensity / 0.3, 1.0) * 100);
+}
+
 function locationSuccess(pos) {
   // Construct URL
   var url = 'https://api.forecast.io/forecast/' + apiKey + '/' +
-      //"40.7142,-74.0064";
       pos.coords.latitude + ',' +  pos.coords.longitude;
   console.log(url);
   // Send request to OpenWeatherMap
@@ -24,17 +29,36 @@ function locationSuccess(pos) {
     function(responseText) {
       // responseText contains a JSON object with weather info
       var json = JSON.parse(responseText);
-      var probability = {};
-      var data = isMinutely ? json.minutely.data : json.hourly.data;
-      for (var i in data) {
-        var dataPoint = data[i];
-        //probability[i] = parseInt(Math.tanh(2 * dataPoint.precipIntensity) * 100);
-        probability[i] = parseInt(dataPoint.precipProbability * 100);
-        //console.log(dataPoint.precipIntensity + "\t" + probability[i] + "\t" + parseInt(dataPoint.precipProbability *100));
+      var payload = {};
+      if (isMinutely) {
+        for (var i in json.minutely.data) {
+          var dataPoint = json.minutely.data[i];
+          var date = new Date(dataPoint.time * 1000);
+          var clockIndex = date.getMinutes();
+          payload[clockIndex] = getIntensityPercent(dataPoint.precipIntensity / 0.3, 1.0);
+        }
       }
+      else {
+        for (var i = 0; i < 12; i++) {
+          var dataPoint = json.hourly.data[i];
+          var date = new Date(dataPoint.time * 1000);
+          var clockIndex = Math.round((date.getMinutes() / 770.0 + date.getHours() / 12.0) * 60) % 60.0;
+          var intensity = getIntensityPercent(dataPoint.precipIntensity / 0.3, 1.0);
+          var nextIntensity = (i + 1 in json.hourly.data)
+            ? getIntensityPercent(json.hourly.data[i + 1].precipIntensity / 0.3, 1.0)
+            : intensity;
+          var interpolateIncrement = (nextIntensity - intensity) / 5.0;
+          payload[clockIndex] = intensity;
+          payload[clockIndex + 1] = Math.round(intensity + interpolateIncrement * 1);
+          payload[clockIndex + 2] = Math.round(intensity + interpolateIncrement * 2);
+          payload[clockIndex + 3] = Math.round(intensity + interpolateIncrement * 3);
+          payload[clockIndex + 4] = Math.round(intensity + interpolateIncrement * 4);
+        }
+      }
+      payload[CALLBACK_ID_KEY] = CBID_FORECAST;
       
       // Send to Pebble
-      Pebble.sendAppMessage(probability,
+      Pebble.sendAppMessage(payload,
         function(e) {
           console.log('Weather info sent to Pebble successfully!');
         },
