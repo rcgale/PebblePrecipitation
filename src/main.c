@@ -34,7 +34,6 @@ static void window_unload(Window *window) {
 
 static void init() {
   callback_create();
-  configuration_set_api_key("6fc0a1acb373d130c51f555776daa05b");
   configuration_load();
   srand(time(NULL));
 
