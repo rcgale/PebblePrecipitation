@@ -34,10 +34,30 @@ static void draw_hands(Layer *layer, GContext *ctx) {
   draw_hand(ctx, hour_hand, settings.is_minutely ? COLOR_INACTIVE_HAND : COLOR_ACTIVE_HAND, HOUR_HAND_STROKE_WIDTH);
 }
 
+/*** Hack: http://codecorner.galanter.net/2016/01/08/solved-issue-with-pebble-framebuffer-after-notification-is-dismissed/ ***/
+static void app_focus_changing(bool focusing) {
+  if (focusing && s_canvas_layer) {
+    layer_set_hidden(s_canvas_layer, true);
+  }
+}
+
+static void app_focus_changed(bool focused) {
+  if (focused && s_canvas_layer) {
+    layer_set_hidden(s_canvas_layer, false);
+    layer_mark_dirty(s_canvas_layer);
+  }
+}
+/**********/
+
 Layer* clock_create(GRect window_bounds) {  
   s_center = grect_center_point(&window_bounds);
   s_canvas_layer = layer_create(window_bounds);
   layer_set_update_proc(s_canvas_layer, draw_hands);
+  app_focus_service_subscribe_handlers((AppFocusHandlers){
+    .did_focus = app_focus_changed,
+    .will_focus = app_focus_changing
+  });
+
   return s_canvas_layer;
 }
 

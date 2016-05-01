@@ -5,6 +5,7 @@
         "configurable"
     ],
     "companyName": "rcgale@gmail.com",
+    "enableMultiJS": false,
     "longName": "Precipitation",
     "projectType": "native",
     "resources": {

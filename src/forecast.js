@@ -22,6 +22,7 @@ function getIntensityPercent(intensity) {
 function locationSuccess(pos) {
   // Construct URL
   var url = 'https://api.forecast.io/forecast/' + apiKey + '/' +
+      //"45.5634004,-122.6829831";
       pos.coords.latitude + ',' +  pos.coords.longitude;
   console.log(url);
   // Send request to OpenWeatherMap
@@ -40,12 +41,13 @@ function locationSuccess(pos) {
       }
       else {
         for (var i = 0; i < 12; i++) {
+          var MAX_INTENSITY = 0.6;
           var dataPoint = json.hourly.data[i];
           var date = new Date(dataPoint.time * 1000);
           var clockIndex = Math.round((date.getMinutes() / 770.0 + date.getHours() / 12.0) * 60) % 60.0;
-          var intensity = getIntensityPercent(dataPoint.precipIntensity / 0.3, 1.0);
+          var intensity = getIntensityPercent(dataPoint.precipIntensity / MAX_INTENSITY, 1.0);
           var nextIntensity = (i + 1 in json.hourly.data)
-            ? getIntensityPercent(json.hourly.data[i + 1].precipIntensity / 0.3, 1.0)
+            ? getIntensityPercent(json.hourly.data[i + 1].precipIntensity / MAX_INTENSITY, 1.0)
             : intensity;
           var interpolateIncrement = (nextIntensity - intensity) / 5.0;
           payload[clockIndex] = intensity;
