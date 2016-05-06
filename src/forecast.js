@@ -2,6 +2,7 @@ var JS_KEY_API_KEY = 98;
 var JS_KEY_IS_MINUTELY = 99;
 var CALLBACK_ID_KEY = 32767;
 var CBID_FORECAST = 1;
+var MIN_PROBABILITY = 0.2;
 
 var apiKey;
 var isMinutely = false;
@@ -15,8 +16,11 @@ var xhrRequest = function (url, type, callback) {
   xhr.send();
 };
 
-function getIntensityPercent(intensity) {
-  return parseInt(Math.min(intensity / 0.3, 1.0) * 100);
+function getIntensityPercent(intensity, probability) {
+  if (probability < MIN_PROBABILITY) {
+    return 0;
+  }
+  return parseInt(Math.min(intensity / 0.3, 1.0) * 100);    
 }
 
 function locationSuccess(pos) {
@@ -45,9 +49,9 @@ function locationSuccess(pos) {
           var dataPoint = json.hourly.data[i];
           var date = new Date(dataPoint.time * 1000);
           var clockIndex = Math.round((date.getMinutes() / 770.0 + date.getHours() / 12.0) * 60) % 60.0;
-          var intensity = getIntensityPercent(dataPoint.precipIntensity / MAX_INTENSITY, 1.0);
+          var intensity = getIntensityPercent(dataPoint.precipIntensity / MAX_INTENSITY, dataPoint.precipProbability);
           var nextIntensity = (i + 1 in json.hourly.data)
-            ? getIntensityPercent(json.hourly.data[i + 1].precipIntensity / MAX_INTENSITY, 1.0)
+            ? getIntensityPercent(json.hourly.data[i + 1].precipIntensity / MAX_INTENSITY, dataPoint.precipProbability)
             : intensity;
           var interpolateIncrement = (nextIntensity - intensity) / 5.0;
           payload[clockIndex] = intensity;

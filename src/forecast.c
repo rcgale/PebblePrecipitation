@@ -138,6 +138,9 @@ void forecast_process_callback(DictionaryIterator *iterator, void *context) {
       draw_wedge(s_context, i, color);      
     }
   }
+  if (s_canvas_layer) {
+    layer_mark_dirty(s_canvas_layer);    
+  }
 }
 
 Layer* forecast_create(GRect window_bounds) {
