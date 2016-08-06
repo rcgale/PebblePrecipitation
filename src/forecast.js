@@ -26,7 +26,7 @@ function getIntensityPercent(intensity, probability) {
 function locationSuccess(pos) {
   // Construct URL
   var url = 'https://api.forecast.io/forecast/' + apiKey + '/' +
-      //"45.5634004,-122.6829831";
+      //"-36.8841,174.7704";
       pos.coords.latitude + ',' +  pos.coords.longitude;
   console.log(url);
   // Send request to OpenWeatherMap

@@ -1,0 +1,42 @@
+{
+    "author": "rcgale@gmail.com",
+    "dependencies": {},
+    "keywords": [],
+    "name": "precipitation",
+    "pebble": {
+        "capabilities": [
+            "location",
+            "configurable"
+        ],
+        "displayName": "Precipitation",
+        "enableMultiJS": false,
+        "messageKeys": {},
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "fonts/meteocons-webfont.ttf",
+                    "name": "FONT_WEATHER_32",
+                    "targetPlatforms": null,
+                    "type": "font"
+                },
+                {
+                    "file": "fonts/iconvault_forecastfont.ttf",
+                    "name": "FONT_WEATHER_14",
+                    "targetPlatforms": null,
+                    "type": "font"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "basalt",
+            "chalk"
+        ],
+        "uuid": "684973b9-c68e-460f-affb-35b05ee7ebc7",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.0.0"
+}
