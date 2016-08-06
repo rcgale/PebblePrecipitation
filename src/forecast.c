@@ -17,7 +17,7 @@
 static bool needs_refresh = true;
 static Layer* s_canvas_layer;
 static GPoint s_center;
-static struct GPath* s_wedges[NUM_WEDGES];
+static GPoint s_wedges[NUM_WEDGES][3];
 static float s_probabilities [POINTS_MINUTELY + 1] = { 0 };
 static GContext *s_context;
 
@@ -50,15 +50,14 @@ static GColor get_color(float percent) {
   }
 }
 
-static GPath* get_wedge(float angle_1, float angle_2) {
-  GPoint point_0 = (GPoint) { 0, 0 };
-  GPoint point_1 = get_point_on_clock(point_0, angle_1, FINAL_RADIUS * 2);
-  GPoint point_2 = get_point_on_clock(point_0, angle_2, FINAL_RADIUS * 2);
+static GPath* get_wedge(int i) {
   GPathInfo path_info = (GPathInfo){
     .num_points = 3,
-    .points = (GPoint[]) { point_0, point_1, point_2 }
+    .points = s_wedges[i]
   };
-  return gpath_create(&path_info);  
+  GPath* path = gpath_create(&path_info);
+  gpath_move_to(path, s_center);
+  return path;
 }
 
 static void fill_wedge(GContext *ctx, GPath *wedge, GColor color) {
@@ -69,35 +68,23 @@ static void fill_wedge(GContext *ctx, GPath *wedge, GColor color) {
   gpath_draw_outline(ctx, wedge);
 }
 
-
 static GPath *s_my_path_ptr = NULL;
 static void draw_wedge(GContext *ctx, int i, GColor color) {
-    if (s_my_path_ptr) {
-      gpath_destroy(s_my_path_ptr);
-    }
-    float angle_1 = 1.0 * i / NUM_WEDGES;
-    float angle_2 = 1.0 * (i + 1) / NUM_WEDGES;
-    s_my_path_ptr = get_wedge(angle_1, angle_2);
-    gpath_move_to(s_my_path_ptr, s_center);
+  if (s_my_path_ptr) {
+    gpath_destroy(s_my_path_ptr);
+  }
+  s_my_path_ptr = get_wedge(i);
+  print_gpath(s_my_path_ptr);
   fill_wedge(ctx, s_my_path_ptr, color);
 }
 
-
-static void init_wedges(GPoint center) {
-  //return;
-  float angle_1, angle_2;
+static void init_wedges() {
   for (int i = 0; i < NUM_WEDGES; i++) {
-    angle_1 = 1.0 * i / NUM_WEDGES;
-    angle_2 = 1.0 * (i + 1) / NUM_WEDGES;
-    s_wedges[i] = get_wedge(angle_1, angle_2);
-    //gpath_move_to(s_wedges[i], s_center);
-    print_gpath(s_wedges[i]);
-  } 
-}
-
-static void destroy_wedges() {
-  for (int i = 0; i < NUM_WEDGES; i++) {
-    gpath_destroy(s_wedges[i]);
+    float angle_1 = 1.0 * i / NUM_WEDGES;
+    float angle_2 = 1.0 * (i + 1) / NUM_WEDGES;
+    s_wedges[i][0] = (GPoint) { 0, 0 };
+    s_wedges[i][1] = get_point_on_clock(s_wedges[i][0], angle_1, FACE_RADIUS);
+    s_wedges[i][2] = get_point_on_clock(s_wedges[i][0], angle_2, FACE_RADIUS);
   }
 }
 
@@ -107,13 +94,11 @@ static void draw_icons(GContext *ctx) {
 
 static void draw_forecast(Layer *layer, GContext *ctx) {
   s_context = ctx;
-  //init_wedges(s_center);
   for (int i = 0; i < NUM_WEDGES; i++) {
     //print_gpath(s_wedges[i]);
     GColor color = get_color(s_probabilities[i]);
     //APP_LOG(APP_LOG_LEVEL_INFO, "data_index: %d", i);
     //APP_LOG(APP_LOG_LEVEL_INFO, "p: %d", (int)round(s_probabilities[i] * 100.0));
-    //fill_wedge(ctx, s_wedges[i], color);
     draw_wedge(ctx, i, color);
   }
   draw_icons(ctx);
@@ -138,11 +123,14 @@ void forecast_process_callback(DictionaryIterator *iterator, void *context) {
       draw_wedge(s_context, i, color);      
     }
   }
+  if (s_canvas_layer) {
+    layer_mark_dirty(s_canvas_layer);    
+  }
 }
 
 Layer* forecast_create(GRect window_bounds) {
   s_center = grect_center_point(&window_bounds);
-  //init_wedges(s_center);
+  init_wedges(s_center);
   s_canvas_layer = layer_create(window_bounds);
   //layer_add_child(s_canvas_layer, textlayer_create());
   layer_set_update_proc(s_canvas_layer, draw_forecast);  
@@ -155,7 +143,6 @@ Layer* forecast_create(GRect window_bounds) {
 }
 
 void forecast_destroy() {
-  destroy_wedges();
   forecast_icons_destroy();
   layer_destroy(s_canvas_layer);
 }

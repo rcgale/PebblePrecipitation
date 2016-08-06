@@ -47,4 +47,6 @@ void configuration_process_callback(DictionaryIterator *iterator, void *context)
   APP_LOG(APP_LOG_LEVEL_INFO, "Config message received!");
   bool is_minutely = 0 == strcmp("true", dict_find(iterator, KEY_IS_MINUTELY)->value->cstring);
   configuration_set_is_minutely(is_minutely);
+  char* api_key = dict_find(iterator, KEY_API_KEY)->value->cstring;
+  configuration_set_api_key(api_key);
 }
