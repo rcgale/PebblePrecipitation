@@ -1,3 +1,14 @@
+var blues = [
+  0xFFFFFF, // GColorWhite
+  0xAAFFFF, // GColorCeleste
+  0x55FFFF, // GColorElectricBlue
+  0x00FFFF, // GColorCyan
+  0x00AAFF, // GColorVividCerulean
+  0x0055FF, // GColorBlueMoon
+  0x0000FF, // GColorBlue
+  0x0000AA  // GColorDukeBlue
+];
+
 var JS_KEY_API_KEY = 98;
 var JS_KEY_IS_MINUTELY = 99;
 var CALLBACK_ID_KEY = 32767;
@@ -16,6 +27,14 @@ var xhrRequest = function (url, type, callback) {
   xhr.send();
 };
 
+function getColor(percent) {
+  if (percent == 0) {
+    return blues[0];
+  }
+  var rounded = Math.round(percent / 100.0 * 7);
+  return blues[rounded];
+}
+
 function getIntensityPercent(intensity, probability) {
   if (probability < MIN_PROBABILITY) {
     return 0;
@@ -26,8 +45,8 @@ function getIntensityPercent(intensity, probability) {
 function locationSuccess(pos) {
   // Construct URL
   var url = 'https://api.forecast.io/forecast/' + apiKey + '/' +
-      //"-36.8841,174.7704";
-      pos.coords.latitude + ',' +  pos.coords.longitude;
+      "19.4300,-99.1300";
+      //pos.coords.latitude + ',' +  pos.coords.longitude;
   console.log(url);
   // Send request to OpenWeatherMap
   xhrRequest(url, 'GET', 
@@ -40,7 +59,7 @@ function locationSuccess(pos) {
           var dataPoint = json.minutely.data[i];
           var date = new Date(dataPoint.time * 1000);
           var clockIndex = date.getMinutes();
-          payload[clockIndex] = getIntensityPercent(dataPoint.precipIntensity / 0.3, 1.0);
+          payload[clockIndex] = getColor(getIntensityPercent(dataPoint.precipIntensity / 0.3, 1.0));
         }
       }
       else {
@@ -54,11 +73,11 @@ function locationSuccess(pos) {
             ? getIntensityPercent(json.hourly.data[i + 1].precipIntensity / MAX_INTENSITY, dataPoint.precipProbability)
             : intensity;
           var interpolateIncrement = (nextIntensity - intensity) / 5.0;
-          payload[clockIndex] = intensity;
-          payload[clockIndex + 1] = Math.round(intensity + interpolateIncrement * 1);
-          payload[clockIndex + 2] = Math.round(intensity + interpolateIncrement * 2);
-          payload[clockIndex + 3] = Math.round(intensity + interpolateIncrement * 3);
-          payload[clockIndex + 4] = Math.round(intensity + interpolateIncrement * 4);
+          payload[clockIndex] = getColor(intensity);
+          payload[clockIndex + 1] = getColor(Math.round(intensity + interpolateIncrement * 1));
+          payload[clockIndex + 2] = getColor(Math.round(intensity + interpolateIncrement * 2));
+          payload[clockIndex + 3] = getColor(Math.round(intensity + interpolateIncrement * 3));
+          payload[clockIndex + 4] = getColor(Math.round(intensity + interpolateIncrement * 4));
         }
       }
       payload[CALLBACK_ID_KEY] = CBID_FORECAST;

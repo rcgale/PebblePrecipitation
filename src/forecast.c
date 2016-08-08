@@ -18,7 +18,7 @@ static bool needs_refresh = true;
 static Layer* s_canvas_layer;
 static GPoint s_center;
 static GPoint s_wedges[NUM_WEDGES][3];
-static float s_probabilities [POINTS_MINUTELY + 1] = { 0 };
+static GColor s_minutely [POINTS_MINUTELY + 1];
 static GContext *s_context;
 
 static GColor* colors = NULL;
@@ -30,24 +30,6 @@ static void print_gpath(GPath* path) {
           path->points[1].x, path->points[1].y,
           path->points[2].x, path->points[2].y);
     //APP_LOG(APP_LOG_LEVEL_INFO, "rotation: %f, offset (%d, %d)", s_wedges[i]->rotation, s_wedges[i]->offset.x, s_wedges[i]->offset.y),  
-}
-
-
-static GColor get_color(float percent) {
-  if (percent == 0) {
-    return COLOR_FORECAST_00;
-  }
-  int rounded = (int)round(percent * 7);
-  switch (rounded) {
-    case 0: return COLOR_FORECAST_10;
-    case 1: return COLOR_FORECAST_20;
-    case 2: return COLOR_FORECAST_30;
-    case 3: return COLOR_FORECAST_40;
-    case 4: return COLOR_FORECAST_50;
-    case 5: return COLOR_FORECAST_60;
-    case 6: return COLOR_FORECAST_70;
-    default: return GColorBlack;
-  }
 }
 
 static GPath* get_wedge(int i) {
@@ -74,7 +56,7 @@ static void draw_wedge(GContext *ctx, int i, GColor color) {
     gpath_destroy(s_my_path_ptr);
   }
   s_my_path_ptr = get_wedge(i);
-  print_gpath(s_my_path_ptr);
+  //print_gpath(s_my_path_ptr);
   fill_wedge(ctx, s_my_path_ptr, color);
 }
 
@@ -96,7 +78,7 @@ static void draw_forecast(Layer *layer, GContext *ctx) {
   s_context = ctx;
   for (int i = 0; i < NUM_WEDGES; i++) {
     //print_gpath(s_wedges[i]);
-    GColor color = get_color(s_probabilities[i]);
+    GColor color = s_minutely[i];
     //APP_LOG(APP_LOG_LEVEL_INFO, "data_index: %d", i);
     //APP_LOG(APP_LOG_LEVEL_INFO, "p: %d", (int)round(s_probabilities[i] * 100.0));
     draw_wedge(ctx, i, color);
@@ -116,11 +98,10 @@ void forecast_process_callback(DictionaryIterator *iterator, void *context) {
   Tuple *minute;
   for (int i = 0; i < NUM_WEDGES; i++) {
     minute = dict_find(iterator, i);   
-    APP_LOG(APP_LOG_LEVEL_INFO, "value at %d: %d", i, (int)minute->value->int16);
-    s_probabilities[i] = (int)minute->value->int16 / 100.0;
+    //APP_LOG(APP_LOG_LEVEL_INFO, "value at %d: %d", i, (int)minute->value->int32);
+    s_minutely[i] = GColorFromHEX((int)minute->value->int32);
     if (s_context) {
-      GColor color = get_color(s_probabilities[i]);
-      draw_wedge(s_context, i, color);      
+      draw_wedge(s_context, i, s_minutely[i]);      
     }
   }
   if (s_canvas_layer) {
