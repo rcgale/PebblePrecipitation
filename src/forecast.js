@@ -92,8 +92,8 @@ function getTempValue(dataPoint) {
 function locationSuccess(pos) {
   // Construct URL
   var url = 'https://api.forecast.io/forecast/' + apiKey + '/' +
-      "19.4300,-99.1300";
-      //pos.coords.latitude + ',' +  pos.coords.longitude;
+      //"19.4300,-99.1300";
+      pos.coords.latitude + ',' +  pos.coords.longitude;
   console.log(url);
   // Send request to OpenWeatherMap
   xhrRequest(url, 'GET', 
