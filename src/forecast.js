@@ -27,12 +27,27 @@ var xhrRequest = function (url, type, callback) {
   xhr.send();
 };
 
-function getColor(percent) {
-  if (percent == 0) {
-    return blues[0];
+function getColorInterpolated(firstPoint, secondPoint, n) {
+  var firstValue = getValue(firstPoint);
+  var secondValue = getValue(secondPoint);
+  var interpolateIncrement = (secondValue - firstValue) / n;
+  var colors = [];
+  for (var i = 0; i < n; i++) {
+    var interpolateValue = Math.round(firstValue + interpolateIncrement * n);
+    var colorArray = blues;
+    colors[i] = getColor(interpolateValue, colorArray);    
   }
-  var rounded = Math.round(percent / 100.0 * 7);
-  return blues[rounded];
+  return colors;
+}
+
+function getColor(percent, colorArray) {
+  var rounded = Math.round(percent / 100.0 * colorArray.length);
+  return colorArray[rounded];
+}
+
+function getValue(dataPoint) {
+  var MAX_INTENSITY = 0.6;
+  return getIntensityPercent(dataPoint.precipIntensity / MAX_INTENSITY, dataPoint.precipProbability);
 }
 
 function getIntensityPercent(intensity, probability) {
@@ -45,8 +60,8 @@ function getIntensityPercent(intensity, probability) {
 function locationSuccess(pos) {
   // Construct URL
   var url = 'https://api.forecast.io/forecast/' + apiKey + '/' +
-      "19.4300,-99.1300";
-      //pos.coords.latitude + ',' +  pos.coords.longitude;
+      //"19.4300,-99.1300";
+      pos.coords.latitude + ',' +  pos.coords.longitude;
   console.log(url);
   // Send request to OpenWeatherMap
   xhrRequest(url, 'GET', 
@@ -59,25 +74,22 @@ function locationSuccess(pos) {
           var dataPoint = json.minutely.data[i];
           var date = new Date(dataPoint.time * 1000);
           var clockIndex = date.getMinutes();
-          payload[clockIndex] = getColor(getIntensityPercent(dataPoint.precipIntensity / 0.3, 1.0));
+          var colors = getColorInterpolated(dataPoint, dataPoint, 1);
+          payload[clockIndex] = colors[0];
         }
       }
       else {
         for (var i = 0; i < 12; i++) {
-          var MAX_INTENSITY = 0.6;
           var dataPoint = json.hourly.data[i];
           var date = new Date(dataPoint.time * 1000);
           var clockIndex = Math.round((date.getMinutes() / 770.0 + date.getHours() / 12.0) * 60) % 60.0;
-          var intensity = getIntensityPercent(dataPoint.precipIntensity / MAX_INTENSITY, dataPoint.precipProbability);
-          var nextIntensity = (i + 1 in json.hourly.data)
-            ? getIntensityPercent(json.hourly.data[i + 1].precipIntensity / MAX_INTENSITY, dataPoint.precipProbability)
-            : intensity;
-          var interpolateIncrement = (nextIntensity - intensity) / 5.0;
-          payload[clockIndex] = getColor(intensity);
-          payload[clockIndex + 1] = getColor(Math.round(intensity + interpolateIncrement * 1));
-          payload[clockIndex + 2] = getColor(Math.round(intensity + interpolateIncrement * 2));
-          payload[clockIndex + 3] = getColor(Math.round(intensity + interpolateIncrement * 3));
-          payload[clockIndex + 4] = getColor(Math.round(intensity + interpolateIncrement * 4));
+          var colors = getColorInterpolated(dataPoint, json.hourly.data[i + 1], 5);
+
+          payload[clockIndex] = colors[0];
+          payload[clockIndex + 1] = colors[1];
+          payload[clockIndex + 2] = colors[2];
+          payload[clockIndex + 3] = colors[3];
+          payload[clockIndex + 4] = colors[4];
         }
       }
       payload[CALLBACK_ID_KEY] = CBID_FORECAST;
