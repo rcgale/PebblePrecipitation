@@ -1,18 +1,22 @@
 var precipColors = [
-  0xFFFFFF, // GColorWhite
-  0xAAFFFF, // GColorCeleste
-  0x55FFFF, // GColorElectricBlue
-  0x00FFFF, // GColorCyan
-  0x00AAFF, // GColorVividCerulean
-  0x0055FF, // GColorBlueMoon
-  0x0000FF, // GColorBlue
-  0x0000AA  // GColorDukeBlue
+  //0xFFFFFF, // GColorWhite
+  0xAAFF55, // GColorInchworm
+  0x00FF00, // GColorGreen
+  0x00AA00, // GColorIslamicGreen 
+  0x005500  // GColorDarkGreen
 ];
 var tempColors = [
-  0xFFFFAA, // 065 GColorPastelYellow 
-  0xFFFF55, // 070 GColorIcterine 
-  0xFFFF00, // 075 GColorYellow
-  0xFFAA55, // 080 GColorRajah 
+  0x0000FF, // 030 GColorBlue
+  0x0055FF, // 035 GColorBlueMoon
+  0x00AAFF, // 040 GColorVividCerulean
+  0x00FFFF, // 045 GColorCyan
+  0x55FFFF, // 050 GColorElectricBlue
+  0xAAFFFF, // 055 GColorCeleste
+  0xFFFFAA, // 060 GColorPastelYellow 
+  0xFFFF55, // 065 GColorIcterine 
+  0xFFFF00, // 070 GColorYellow
+  0xFFAA55, // 075 GColorRajah 
+  0xFFAA00, // 080 GColorChromeYellow
   0xFF5500, // 085 GColorOrange
   0xFF0000, // 090 GColorRed 
   0xFF0055, // 095 GColorFolly 
@@ -24,8 +28,8 @@ var JS_KEY_IS_MINUTELY = 99;
 var CALLBACK_ID_KEY = 32767;
 var CBID_FORECAST = 1;
 var MIN_PROBABILITY = 0.2;
-var MIN_TEMP = 60.0;
-var MAX_TEMP = 105.0;
+var MIN_TEMP = 30.0;
+var MAX_TEMP = 100.0;
 
 var apiKey;
 var isMinutely = false;
@@ -75,20 +79,21 @@ function getIntensityPercent(intensity, probability) {
 }
 
 function getTempValue(dataPoint) {
-  if (dataPoint.apparentTemperature < MIN_TEMP) {
+  var temp = dataPoint.temperature;
+  if (temp < MIN_TEMP) {
     return 0.0;
   }
-  if (dataPoint.apparentTemperature > MAX_TEMP) {
+  if (temp > MAX_TEMP) {
     return 1.0;
   }
-  return 1.0 * (dataPoint.apparentTemperature - MIN_TEMP) / (MAX_TEMP - MIN_TEMP);
+  return 1.0 * (temp - MIN_TEMP) / (MAX_TEMP - MIN_TEMP);
 }
 
 function locationSuccess(pos) {
   // Construct URL
   var url = 'https://api.forecast.io/forecast/' + apiKey + '/' +
-      //"19.4300,-99.1300";
-      pos.coords.latitude + ',' +  pos.coords.longitude;
+      "19.4300,-99.1300";
+      //pos.coords.latitude + ',' +  pos.coords.longitude;
   console.log(url);
   // Send request to OpenWeatherMap
   xhrRequest(url, 'GET', 
