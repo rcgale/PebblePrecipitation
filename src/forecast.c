@@ -79,8 +79,6 @@ static void draw_forecast(Layer *layer, GContext *ctx) {
   for (int i = 0; i < NUM_WEDGES; i++) {
     //print_gpath(s_wedges[i]);
     GColor color = s_minutely[i];
-    //APP_LOG(APP_LOG_LEVEL_INFO, "data_index: %d", i);
-    //APP_LOG(APP_LOG_LEVEL_INFO, "p: %d", (int)round(s_probabilities[i] * 100.0));
     draw_wedge(ctx, i, color);
   }
   draw_icons(ctx);

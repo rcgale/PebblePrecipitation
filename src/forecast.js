@@ -1,4 +1,4 @@
-var blues = [
+var precipColors = [
   0xFFFFFF, // GColorWhite
   0xAAFFFF, // GColorCeleste
   0x55FFFF, // GColorElectricBlue
@@ -8,12 +8,24 @@ var blues = [
   0x0000FF, // GColorBlue
   0x0000AA  // GColorDukeBlue
 ];
+var tempColors = [
+  0xFFFFAA, // 065 GColorPastelYellow 
+  0xFFFF55, // 070 GColorIcterine 
+  0xFFFF00, // 075 GColorYellow
+  0xFFAA55, // 080 GColorRajah 
+  0xFF5500, // 085 GColorOrange
+  0xFF0000, // 090 GColorRed 
+  0xFF0055, // 095 GColorFolly 
+  0xAA0000  // 100 GColorDarkCandyAppleRed   
+];
 
 var JS_KEY_API_KEY = 98;
 var JS_KEY_IS_MINUTELY = 99;
 var CALLBACK_ID_KEY = 32767;
 var CBID_FORECAST = 1;
 var MIN_PROBABILITY = 0.2;
+var MIN_TEMP = 60.0;
+var MAX_TEMP = 105.0;
 
 var apiKey;
 var isMinutely = false;
@@ -28,24 +40,29 @@ var xhrRequest = function (url, type, callback) {
 };
 
 function getColorInterpolated(firstPoint, secondPoint, n) {
-  var firstValue = getValue(firstPoint);
-  var secondValue = getValue(secondPoint);
+  var firstValue = getPrecipValue(firstPoint);
+  var secondValue = getPrecipValue(secondPoint);
+  var colorArray = precipColors;
+  if (firstValue == 0 && secondValue == 0) {
+    firstValue = getTempValue(firstPoint);
+    secondValue = getTempValue(secondPoint);
+    colorArray = tempColors;
+  }
   var interpolateIncrement = (secondValue - firstValue) / n;
   var colors = [];
   for (var i = 0; i < n; i++) {
-    var interpolateValue = Math.round(firstValue + interpolateIncrement * n);
-    var colorArray = blues;
+    var interpolateValue = firstValue + interpolateIncrement * n;
     colors[i] = getColor(interpolateValue, colorArray);    
   }
   return colors;
 }
 
 function getColor(percent, colorArray) {
-  var rounded = Math.round(percent / 100.0 * colorArray.length);
+  var rounded = Math.floor(percent * colorArray.length);
   return colorArray[rounded];
 }
 
-function getValue(dataPoint) {
+function getPrecipValue(dataPoint) {
   var MAX_INTENSITY = 0.6;
   return getIntensityPercent(dataPoint.precipIntensity / MAX_INTENSITY, dataPoint.precipProbability);
 }
@@ -54,7 +71,17 @@ function getIntensityPercent(intensity, probability) {
   if (probability < MIN_PROBABILITY) {
     return 0;
   }
-  return parseInt(Math.min(intensity / 0.3, 1.0) * 100);    
+  return Math.min(intensity / 0.3, 1.0);    
+}
+
+function getTempValue(dataPoint) {
+  if (dataPoint.apparentTemperature < MIN_TEMP) {
+    return 0.0;
+  }
+  if (dataPoint.apparentTemperature > MAX_TEMP) {
+    return 1.0;
+  }
+  return 1.0 * (dataPoint.apparentTemperature - MIN_TEMP) / (MAX_TEMP - MIN_TEMP);
 }
 
 function locationSuccess(pos) {
