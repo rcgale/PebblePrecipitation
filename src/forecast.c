@@ -25,14 +25,6 @@ static GContext *s_context;
 static GColor* colors;
 
 static GPath* get_wedge(int i) {
-  if (!s_paths[i]) {
-    GPathInfo path_info = (GPathInfo){
-      .num_points = 3,
-      .points = s_points[i]
-    };
-    s_paths[i] = gpath_create(&path_info);
-    gpath_move_to(s_paths[i], s_center);    
-  }
   return s_paths[i];
 }
 
@@ -90,9 +82,31 @@ void forecast_process_callback(DictionaryIterator *iterator, void *context) {
   }
 }
 
+void paths_create() {
+  for (int i = 0; i < NUM_WEDGES; i++) {
+    if (s_paths[i]) {
+      gpath_destroy(s_paths[i]);      
+    }
+
+    GPathInfo path_info = (GPathInfo){
+      .num_points = 3,
+      .points = s_points[i]
+    };
+    s_paths[i] = gpath_create(&path_info);
+    gpath_move_to(s_paths[i], s_center);    
+  }
+}
+
+void paths_destroy() {
+  for (int i = 0; i < NUM_WEDGES; i++) {
+    gpath_destroy(s_paths[i]);
+  }
+}
+
 Layer* forecast_create(GRect window_bounds) {
   s_center = grect_center_point(&window_bounds);
-  init_points(s_center);
+  init_points();
+  paths_create();
   s_canvas_layer = layer_create(window_bounds);
   //layer_add_child(s_canvas_layer, textlayer_create());
   layer_set_update_proc(s_canvas_layer, draw_forecast);  
@@ -106,6 +120,7 @@ Layer* forecast_create(GRect window_bounds) {
 
 void forecast_destroy() {
   forecast_icons_destroy();
+  paths_destroy();
   layer_destroy(s_canvas_layer);
 }
 
@@ -118,5 +133,7 @@ void forecast_update() {
 
 void forecast_queue_refresh() {
   needs_refresh = true;
+  paths_destroy();
+  paths_create();
   forecast_update();
 }
